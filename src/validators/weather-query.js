@@ -5,7 +5,7 @@ function invalid(field, reason) {
   return new HttpError(400, 'Invalid query', { [field]: reason });
 }
 
-// ?city=
+// ?city
 export function parseCity(value) {
   if (Array.isArray(value)) {
     throw invalid('city', 'city must be sent only once');
@@ -22,8 +22,40 @@ export function parseCity(value) {
   return city;
 }
 
-// TODO (you): check ?cities= and return an array of trimmed city names. Throw a
-// 400 HttpError with details.cities when it breaks a rule from the assignment page.
+// ?cities=a,b,c -> array of trimmed names
 export function parseCities(value) {
-  throw new Error('parseCities is not written yet');
+  if (Array.isArray(value)) {
+    throw invalid('cities', 'cities must be sent only once');
+  }
+  if (typeof value !== 'string' || value.trim() === '') {
+    throw invalid('cities', 'cities is required');
+  }
+
+  const cities = value.split(',').map((name) => name.trim());
+
+  // catches "Toronto,,Halifax" and trailing commas
+  if (cities.includes('')) {
+    throw invalid('cities', 'cities must not contain an empty name');
+  }
+  if (cities.length < 2 || cities.length > 5) {
+    throw invalid('cities', 'cities must list 2 to 5 cities');
+  }
+
+  for (const city of cities) {
+    if (city.length < 2 || city.length > 60) {
+      throw invalid('cities', `"${city}" must be 2 to 60 characters`);
+    }
+  }
+
+  // Duplicates are case-insensitive 
+  const seen = new Set();
+  for (const city of cities) {
+    const key = city.toLowerCase();
+    if (seen.has(key)) {
+      throw invalid('cities', `"${city}" is listed more than once`);
+    }
+    seen.add(key);
+  }
+
+  return cities;
 }
