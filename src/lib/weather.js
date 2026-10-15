@@ -1,11 +1,12 @@
 import { config } from '../config.js';
 import { geocodeCity, getForecast } from './open-meteo.js';
 import { describeWeatherCode } from './weather-codes.js';
+import { TtlCache } from './cache.js';
 
-// TODO (you): create one cache for the whole app, with a time to live of
-// config.cacheTtlSeconds.
+// One shared cache for /api/weather and /api/compare
+const cache = new TtlCache(config.cacheTtlSeconds);
 
-// Maps Open-Meteo's response onto summary shape
+// Maps Open-Meteo's response onto our summary shape
 function buildSummary(location, forecast, fetchedAt) {
   const { current, daily } = forecast;
 
@@ -34,21 +35,28 @@ function buildSummary(location, forecast, fetchedAt) {
   };
 }
 
-// TODO (you): return the weather summary for one city, in the shape shown on
-// the assignment page. Check the cache first. On a miss, geocode the city, get
-// the forecast, build the summary, store it, and return it with cached: false.
-// On a hit, return the stored summary with cached: true.
+// Single-city lookup used by both routes
 export async function getCityWeather(city) {
-  // timestamp the upstream call, not the response
+  // Case-insensitive so Toronto/toronto are all valid/hit the same cache entry
+  const key = city.toLowerCase();
+
+  const stored = cache.get(key);
+  if (stored) {
+    return { ...stored, cached: true };
+  }
+
+  // Timestamp for upstream call
   const fetchedAt = new Date().toISOString();
 
+  // Any failure throws before set(), so errors never get cached
   const location = await geocodeCity(city);
   const forecast = await getForecast(location.latitude, location.longitude);
+  const summary = buildSummary(location, forecast, fetchedAt);
 
-  return buildSummary(location, forecast, fetchedAt);
+  cache.set(key, summary);
+  return summary;
 }
 
-// TODO (you): return the cache statistics for GET /api/cache/stats.
 export function getCacheStats() {
-  throw new Error('getCacheStats is not written yet');
+  return cache.stats();
 }
