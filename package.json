@@ -1,0 +1,17 @@
+{
+  "name": "cpan212-a1-starter",
+  "version": "1.0.0",
+  "description": "CPAN 212 Assignment 1 starter: city weather service over Open-Meteo",
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "node --watch --env-file-if-exists=.env src/server.js",
+    "start": "node --env-file-if-exists=.env src/server.js"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}
