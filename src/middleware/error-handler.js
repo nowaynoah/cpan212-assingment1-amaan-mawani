@@ -1,15 +1,17 @@
 import { HttpError } from '../lib/http-error.js';
 
-// Express treats a middleware with four parameters as an error handler.
+// Express treats a 4-arg middleware as the error handler
 export function errorHandler(err, req, res, next) {
   if (res.headersSent) {
     return next(err);
   }
 
-  // TODO (you): when err is an HttpError, respond with err.status and
-  // { error: { message: err.message, details: err.details } }.
+  // Expected failures carry their own status
+  if (err instanceof HttpError) {
+    return res.status(err.status).json({ error: { message: err.message, details: err.details } });
+  }
 
-  // Anything else is a bug. The details go to the terminal, never to the client.
+  // Anything else is a bug, logs full error here, never leaks it to the client
   console.error(err);
   res.status(500).json({ error: { message: 'Internal server error' } });
 }
