@@ -4,30 +4,31 @@ An Express 5 service that looks up the current weather and a 3-day forecast for 
 
 ## Run it
 
-Requires Node 24 or newer. 
+Requires Node 24 or newer.
 
-Using Bash terminal:
+Using a Bash terminal:
 
+```bash
 npm install
 cp .env.example .env
 npm run dev
+```
 
-If using PowerShell, use 'copy .env.example .env' instead of 'cp'.
+If using Command Prompt, use `copy .env.example .env` instead of `cp`.
 
-The server runs at http://localhost:4000. 'npm start' runs it without watching for changes. 
-
+The server runs at http://localhost:4000. `npm start` runs it without watching for changes.
 
 ## Environment variables
 
-All variables. The defaults listed below are used when a variable is not set up. 
+All variables are optional. The defaults listed below are used when a variable is not set.
 
-| Variable | Default Value | Controls 
-
-| PORT | 4000 | The port the server listens on 
-| GEOCODING_URL | `https://geocoding-api.open-meteo.com/v1` | Base URL of the geocoding API 
-| FORECAST_URL | `https://api.open-meteo.com/v1` | Base URL of the forecast API 
-| UPSTREAM_TIMEOUT_MS | 5000 | How long to wait for each Open-Meteo request 
-| CACHE_TTL_SECONDS | 600` | How long a cached answer stays valid 
+| Variable | Default Value | Controls |
+|---|---|---|
+| `PORT` | `4000` | The port the server listens on |
+| `GEOCODING_URL` | `https://geocoding-api.open-meteo.com/v1` | Base URL of the geocoding API |
+| `FORECAST_URL` | `https://api.open-meteo.com/v1` | Base URL of the forecast API |
+| `UPSTREAM_TIMEOUT_MS` | `5000` | How long to wait for each Open-Meteo request |
+| `CACHE_TTL_SECONDS` | `600` | How long a cached answer stays valid |
 
 ## Endpoints
 
@@ -35,26 +36,29 @@ All variables. The defaults listed below are used when a variable is not set up.
 
 Current weather and a 3-day forecast for one city.
 
-bash
+```bash
 curl "http://localhost:4000/api/weather?city=Toronto"
+```
 
-Responds `200` with `{ data, attribution }`, where `data` has `location`, `current`, `daily` (for 3 days), `fetchedAt` and `cached`. Responds `400` if `city` is missing, repeated or not 2 to 60 characters, and `404` if no city matches.
+Responds `200` with `{ data, attribution }`, where `data` has `location`, `current`, `daily` (3 days), `fetchedAt` and `cached`. Responds `400` if `city` is missing, repeated or not 2 to 60 characters, and `404` if no city matches.
 
 ### `GET /api/compare?cities=<name>,<name>,...`
 
 The same lookup for 2 to 5 cities at once.
 
-bash
+```bash
 curl "http://localhost:4000/api/compare?cities=Toronto,Vancouver,Halifax"
+```
 
-Responds `200` whenever the query is valid, even if some fail. `data.cities` has one entry per city in the order requested, each with `ok: true` and its `weather`, or `ok: false` and an `error`. `data.summary` has `succeeded`, `failed`, `warmest` and `coldest`. Responds `400` for a missing or repeated parameter, an empty name, fewer than 2 or more than 5 cities, a name that isn't 2 to 60 characters, or a city listed twice.
+Responds `200` whenever the query is valid, even if some cities fail. `data.cities` has one entry per city in the order requested, each with `ok: true` and its `weather`, or `ok: false` and an `error`. `data.summary` has `succeeded`, `failed`, `warmest` and `coldest`. Responds `400` for a missing or repeated parameter, an empty name, fewer than 2 or more than 5 cities, a name that isn't 2 to 60 characters, or a city listed twice.
 
 ### `GET /api/cache/stats`
 
 How many answers are cached and how often the cache was used.
 
-bash
+```bash
 curl "http://localhost:4000/api/cache/stats"
+```
 
 Responds `200` with `{ data: { entries, hits, misses, ttlSeconds } }`.
 
